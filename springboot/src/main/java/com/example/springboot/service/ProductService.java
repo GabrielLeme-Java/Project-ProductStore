@@ -7,7 +7,9 @@ import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -19,28 +21,61 @@ public class ProductService {
     private final ModelMapper modelMapper;
 
     public ProductDto save(ProductDto productDto) {
-        return this.modelMapper.map(
-                this.productRepository.save(
-                        this.modelMapper.map(productDto, ProductModel.class)),
-                ProductDto.class);
+        ProductModel model = this.modelMapper.map(productDto, ProductModel.class);
+        ProductModel modelReturn = this.productRepository.save(model);
+        ProductDto map = this.modelMapper.map(modelReturn, ProductDto.class);
+        return map;
     }
 
     public List<ProductDto> getAll() {
-        return this.productRepository.findAll()
-                .stream().map(p -> this.modelMapper.map(p, ProductDto.class)).toList();
+        List<ProductModel> listaPrecisaSerRetornada = this.productRepository.findAll();
+        List<ProductDto> listaDtoVaziaAserRetornada = new ArrayList<>();
 
+        for (ProductModel p : listaPrecisaSerRetornada){
+            ProductDto map = this.modelMapper.map(p, ProductDto.class);
+            listaDtoVaziaAserRetornada.add(map);
+        }
+        return listaDtoVaziaAserRetornada;
     }
 
     public ProductDto findById(UUID id) {
-        return this.modelMapper.map(this.productRepository.findById(id), ProductDto.class);
+        Optional<ProductModel> byId = this.productRepository.findById(id);
+        if (byId.isEmpty()){
+            throw new RuntimeException("Produto não encontrado");
+        }
+        ProductDto map = this.modelMapper.map(byId, ProductDto.class);
+        return map;
     }
 
 
-    public Object update(ProductDto productDto, UUID id) {
-        return null;
+    public ProductDto update(ProductDto productDto, UUID id) {
+        Optional<ProductModel> byId = this.productRepository.findById(id);
+        if (byId.isEmpty()) {
+            throw new RuntimeException("Esse produto não existe");
+        }
+        this.modelMapper.map(productDto, byId);
+        ProductModel productModel = this.productRepository.save(byId.get());
+        ProductDto productDto1 = this.modelMapper.map(productModel, ProductDto.class);
+        return productDto1;
+
+
     }
 
-    public Object delete(UUID id) {
-        return null;
+    public void delete(UUID id) {
+        Optional<ProductModel> byId = this.productRepository.findById(id);
+        if (byId.isEmpty()){
+            throw new RuntimeException("Produto não existe");
+        }
+        this.productRepository.delete(byId.get());
     }
+
+
+
+
+
+
+
+
+
+
 }

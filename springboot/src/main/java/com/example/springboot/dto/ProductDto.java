@@ -11,8 +11,6 @@ import java.util.UUID;
 @Data
 public class ProductDto {
 
-    @JsonProperty("UUID")
-    private UUID idProduct;
     @NotBlank
     private String name;
     @NotNull
